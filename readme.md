@@ -67,9 +67,9 @@ In short, this code is looking for old plugins that have been removed from moder
 
 ### 2. ActiveX Component Versioning (`l(e)`)
 
-The `l(e)` function is a legacy method designed to query the version of specific **ActiveX components** in Internet Explorer, identified by hardcoded GUIDs (e.g., `{7790769C-...}`). This technique is **entirely non-functional** in any browser other than old IE.
+The `getActiveXComponentVersion(componentGUID)` function is a legacy method designed to query the version of specific **ActiveX components** in Internet Explorer, identified by hardcoded GUIDs (e.g., `{7790769C-...}`). This technique is **entirely non-functional** in any browser other than old IE.
 
-As a result, any call to `l()` in a modern environment fails and returns no data. In script, the original `l(e)` function is commented out, and all calls within the main data array that would have used it are replaced with simple functions that return an empty string, effectively neutralizing this obsolete check.
+As a result, any call to `getActiveXComponentVersion()` in a modern environment fails and returns no data. In script, the original `l(e)` function is commented out, and all calls within the main data array that would have used it are replaced with simple functions that return an empty string, effectively neutralizing this obsolete check.
 
 ```javascript
 //refactored file
@@ -90,12 +90,12 @@ function getActiveXComponentVersion(componentGUID) {
 
 ### 3. Navigator Property Probing (`o(e)`)
 
-The `o(e)` function attempts to gather system information by checking properties like `navigator.oscpu` or `navigator.language`. However, a deep analysis of this function reveals that it was **intentionally designed to always return an empty string**.
+The `neutralizedNavigatorProbe(propertyNames)` function attempts to gather system information by checking properties like `navigator.oscpu` or `navigator.language`. However, a deep analysis of this function reveals that it was **intentionally designed to always return an empty string**.
 
 The key is this line within the function:
-`var r = (e[t], "");`
+`var propertyValue = (propertyNames[i], "");`
 
-This code uses the **JavaScript comma operator**. It evaluates the left side (`e[t]`, which gets the property name like `"navigator.language"`) and discards the result. It then evaluates the right side (`""`) and returns it. Therefore, the variable `r` is **always assigned an empty string**, regardless of the browser's actual properties.
+This code uses the **JavaScript comma operator**. It evaluates the left side (`propertyNames[i]`, which gets the property name like `"navigator.language"`) and discards the result. It then evaluates the right side (`""`) and returns it. Therefore, the variable `propertyValue` is **always assigned an empty string**, regardless of the browser's actual properties.
 
 This means the original developers left the function call in place but deliberately disabled its data collection capability. Our decision to hardcode the return value to `""` is not an assumption but a direct replication of the original script's behavior.
 
@@ -117,9 +117,9 @@ function neutralizedNavigatorProbe(propertyNames) {
 
 ### 4. NPAPI Plugin Scanning (`t(e)`)
 
-The `t()` function was designed to detect legacy plugins (Flash, Silverlight, etc.) by scanning the `navigator.plugins` list. This method is **completely obsolete** because the underlying technology, **NPAPI (Netscape Plugin API)**, has been removed from all major browsers for security reasons.
+The `scanForNpapiPlugin()` function was designed to detect legacy plugins (Flash, Silverlight, etc.) by scanning the `navigator.plugins` list. This method is **completely obsolete** because the underlying technology, **NPAPI (Netscape Plugin API)**, has been removed from all major browsers for security reasons.
 
-The `navigator.plugins` array in modern browsers no longer contains these external plugins. Since the function is searching for plugins in an ecosystem that no longer exists, it is guaranteed to return an empty string. For this reason, we have replaced all calls to `t()` in our script with functions that statically return `""`.
+The `navigator.plugins` array in modern browsers no longer contains these external plugins. Since the function is searching for plugins in an ecosystem that no longer exists, it is guaranteed to return an empty string. For this reason, we have replaced all calls to `scanForNpapiPlugin()` in our script with functions that statically return `""`.
 
 ```javascript
 //refactored file
@@ -165,9 +165,9 @@ return document.body.removeChild(span),offsetHeight
 
 After collecting the raw fingerprint data, the script uses a series of functions to compress, encode, and hash the final string.
 
-### `function a(e, t, r, n)` - String Replacer
+### `function stringReplacer(sourceString, findSubstring, replaceWith, replaceOnlyFirst)` - String Replacer
 
-This is a utility function for string replacement. It finds a substring `t` within a string `e` and replaces it with `r`. It's used to substitute placeholder values like `@UTC@` with the current Unix timestamp right before processing.
+This is a utility function for string replacement. It finds a substring `findSubstring` within a string `sourceString` and replaces it with `replaceWith`. It's used to substitute placeholder values like `@UTC@` with the current Unix timestamp right before processing.
 
 ```javascript
 //refactored file
@@ -181,12 +181,12 @@ function stringReplacer(sourceString, findSubstring, replaceWith, replaceOnlyFir
 }
 ```
 
-### `function u(e)` - Compression and Hashing Orchestrator
+### `function compressAndHash(rawFingerprintString)` - Compression and Hashing Orchestrator
 
 This is the main function that processes the final fingerprint string, turning it into the compact `F` value. It performs a four-step process:
 
-1.  **Dictionary Compression:** It takes the raw fingerprint string `e` and iterates through a predefined list of common substrings (the `b` array). Each found substring is replaced with a single, non-printable character. This significantly shortens the string.
-2.  **Data Encoding:** The newly compressed string is passed to `function c()`, which encodes it into a custom Base64-like format using a Huffman-style table (the `g` map).
+1.  **Dictionary Compression:** It takes the raw fingerprint string `rawFingerprintString` and iterates through a predefined list of common substrings (the `compressionDictionary ` array). Each found substring is replaced with a single, non-printable character. This significantly shortens the string.
+2.  **Data Encoding:** The newly compressed string is passed to `function compressAndHash()`, which encodes it into a custom Base64-like format using a Huffman-style table (the `huffmanTable` map).
 3.  **Checksum Hashing:** It calculates a 16-bit checksum/hash of the **original, uncompressed** fingerprint string using a series of bitwise operations (shifts and XORs).
 4.  **Final Combination:** This 16-bit checksum is encoded into a 3-character string. The final `F` value is created by concatenating the encoded data from step 2 with this 3-character checksum. The result is a compact, integrity-checked string.
 
@@ -212,13 +212,13 @@ function compressAndHash(rawFingerprintString) {
 }
 ```
 
-### `function c(e)` - Custom Base64/Huffman-style Encoder
+### `function huffmanEncoder(compressedString)` - Custom Base64/Huffman-style Encoder
 
-This function is responsible for the core data encoding. It converts the compressed string from `u()` into its final text representation.
+This function is responsible for the core data encoding. It converts the compressed string from `compressAndHash()` into its final text representation.
 
 *   **Input:** A string that has already been compressed via dictionary substitution.
-*   **Process:** It reads the input character by character. For each character, it uses the `g` map as a lookup table to find its corresponding binary representation, which consists of a `[bit_length, value]` pair. These variable-length bit sequences are packed together into a continuous bitstream.
-*   **Output:** As soon as the bitstream buffer contains 6 or more bits, the function extracts a 6-bit chunk, looks up the corresponding character in the custom alphabet `E` (`.0123...xyz`), and appends it to the result string.
+*   **Process:** It reads the input character by character. For each character, it uses the `huffmanTable` map as a lookup table to find its corresponding binary representation, which consists of a `[bit_length, value]` pair. These variable-length bit sequences are packed together into a continuous bitstream.
+*   **Output:** As soon as the bitstream buffer contains 6 or more bits, the function extracts a 6-bit chunk, looks up the corresponding character in the custom alphabet `customAlphabetw` (`.0123...xyz`), and appends it to the result string.
 *   **Details:** It also adds header bits at the beginning and padding at the end to ensure the bitstream is correctly framed and fully processed. This custom encoding scheme is highly efficient for the specific character set found in the fingerprint data.
 
 ```javascript 
