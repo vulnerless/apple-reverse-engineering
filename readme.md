@@ -1,6 +1,6 @@
 # Apple Fingerprint Reverse Engineering
 
-This repository documents the reverse engineering of the browser fingerprint generated for Apple's `x-apple-i-fd-client-info` HTTP header. This analysis and writing repo was completed in approximately 3 hours.
+This repository documents the reverse engineering of the browser fingerprint generated for Apple's `x-apple-i-fd-client-info` HTTP header. This analysis and writing repo was completed in approximately 3 hours, so there may be some areas for improvement.
 
 ## Overview
 > **Important**: If Apple is not happy about this repository, , please contact me via email address in my profile instead of sending a DMCA takedown. This project is for educational and research purposes only.
