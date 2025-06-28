@@ -4,7 +4,7 @@ This repository documents the reverse engineering of the browser fingerprint gen
 
 ## Overview
 
-When you visit Apple's websites login page, your browser sends a special HTTP header named `x-apple-i-fd-client-info`. This header acts as a security token, helping Apple identify and validate your browser to prevent automated bots and potential fraud. The most critical part of this header is a field labeled `F`, which contains a complex, encoded "fingerprint" of your browser.
+When you visit Apple's websites your browser sends a special HTTP header named `x-apple-i-fd-client-info`. This header acts as a security token, helping Apple identify and validate your browser to prevent automated bots and potential fraud. The most critical part of this header is a field labeled `F`, which contains a complex, encoded "fingerprint" of your browser.
 
 Inside this repository, you will find:
 1.  A detailed breakdown of each fingerprinting technique employed by the original script.
