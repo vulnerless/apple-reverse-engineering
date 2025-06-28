@@ -3,6 +3,13 @@
 This repository documents the reverse engineering of the browser fingerprint generated for Apple's `x-apple-i-fd-client-info` HTTP header. This analysis and writing repo was completed in approximately 3 hours, so there may be some areas for improvement.
 
 ## Overview
+
+When you visit Apple's official websites, like iCloud or the Apple ID login page, your browser sends a special HTTP header named `x-apple-i-fd-client-info`. This header acts as a security token, helping Apple identify and validate your browser to prevent automated bots and potential fraud. The most critical part of this header is a field labeled `F`, which contains a complex, encoded "fingerprint" of your browser.
+
+Inside this repository, you will find:
+1.  A detailed breakdown of each fingerprinting technique employed by the original script.
+2.  A fully functional, refactored JavaScript file (`refactored.js`) that can generate a valid fingerprint. This script has been carefully "neutralized" by removing all dependencies on a live browser environment (like the DOM), allowing it to run in any standard Node.js environment.
+   
 > **Important**: If Apple is not happy about this repository, , please contact me via email address in my profile instead of sending a DMCA takedown. This project is for educational and research purposes only.
 >
 > *(All work done in this repository was for my own learning purposes.)*
